@@ -19,6 +19,8 @@ def load(**kwargs):
         be set to 0.25.
     """
     dataframe = getdataframe()
+    # dataframe = dataframe[~(dataframe['class'].isin([0,1,3,5]))]
+    # dataframe.reset_index(drop=True, inplace=True)
     dataframe['class'].replace(
         {1: 'building_windows_float_processed',
          2: 'building_windows_non_float_processed',
@@ -41,6 +43,7 @@ def load(**kwargs):
         'Fe': (lambda x: (x - 0.0570) / 0.0974),
     }
     dataframe.drop(columns='Id', inplace=True)
+
     for k in fn_dict:
         dataframe[k] = dataframe[k].transform(fn_dict[k])
 
