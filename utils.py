@@ -1,11 +1,12 @@
 import os
 import gzip
+import tarfile
 import contextlib
 import time
 from six.moves.urllib import request
 from progressbar import ProgressBar, Percentage, Bar, ETA, FileTransferSpeed
 
-from params import *
+from .params import *
 
 
 def downloader(target_folder, base_url, filenames):
@@ -23,17 +24,27 @@ def downloader(target_folder, base_url, filenames):
             expected_filesize = int(f.headers['content-length'])
             print('expected file size:%d' % expected_filesize)
             if filepath.endswith('.gz'):
-                if os.path.isfile(filepath.replace('.gz', '')):
-                    print('file already exists')
-                    continue
+                if os.path.isfile(filepath.replace('.gz', '')):  # 如果gzip文件已经被解压了
+                    print('file %s already exists' % filename.replace('.gz', ''))
                 elif os.path.isfile(filepath) and os.path.getsize(filepath) == expected_filesize:
+                    # 如果没有被解压，而且gzip文件确实存在，而且文件大小相符（已下载完成）
                     print('%s exists, unzip...' % filename)
                     unzip_gz(filepath)
                     del_file(filepath)
+                # 运行到这里有两种情况：1gzip文件已经被解压2gzip文件没有被下载
+                if os.path.isfile(filepath.replace('.gz', '')):  # 如果到目前为止gzip文件已经被解压了
+                    filename = filename.replace('.gz', '')
+                    filepath = filepath.replace('.gz', '')
+                    if tarfile.is_tarfile(filepath):  # 如果被解压的文件是tar文件
+                        if not os.path.isdir(filepath.replace('.tar', '')):  # 如果tar文件没有被解压
+                            print('extract %s ...' % filename)
+                            extract_tar(filepath)
+                            del_file(filepath)
                     continue
+
             else:
                 if os.path.isfile(filepath) and os.path.getsize(filepath) == expected_filesize:
-                    print('file already exists')
+                    print('file %s already exists' % filename)
                     continue
 
         time.sleep(3)
@@ -59,12 +70,28 @@ def downloader(target_folder, base_url, filenames):
             unzip_gz(filepath)
             del_file(filepath)
 
+        filename = filename.replace('.gz', '')
+        filepath = filepath.replace('.gz', '')
+
+        if filename.endswith('.tar'):
+            print('extract %s ...' % filename)
+            extract_tar(filepath)
+            del_file(filepath)
+
 
 def unzip_gz(file_path):
     target_path = file_path.replace(".gz", "")
     target_file = gzip.GzipFile(file_path)
     open(target_path, "wb+").write(target_file.read())
     target_file.close()
+
+
+def extract_tar(file_path):
+    if tarfile.is_tarfile(file_path):
+        target_path = os.path.dirname(file_path)
+        file = tarfile.open(file_path)
+        file.extractall(target_path)
+        file.close()
 
 
 def del_file(path):

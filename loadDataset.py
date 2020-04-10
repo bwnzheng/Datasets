@@ -4,7 +4,8 @@ load_fns = {
     'iris': Iris.load,
     'MNIST': MNIST.load,
     'glass': Glass.load,
-    'ionosphere': Ionosphere.load
+    'ionosphere': Ionosphere.load,
+    'mlprove': TheoremProving.load
 }
 
 
