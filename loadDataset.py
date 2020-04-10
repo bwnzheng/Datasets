@@ -5,7 +5,8 @@ load_fns = {
     'MNIST': MNIST.load,
     'glass': Glass.load,
     'ionosphere': Ionosphere.load,
-    'mlprove': TheoremProving.load
+    'mlprove': TheoremProving.load,
+    'balance': BalanceScale.load
 }
 
 
